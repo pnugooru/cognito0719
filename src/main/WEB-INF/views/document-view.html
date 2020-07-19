@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>US Tax Courts</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+        <script src="/js/cognito.js" type="text/javascript"></script>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/cognito.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
+    <style></style>
+</head>
+<body>
+    <div class="container-fluid ">
+        <header class="">
+            <div class="row banner accent-pri">
+                <div class="col-1" style="padding-left: 40px; padding-top: 20px;">
+                    <a id="" href="/">
+                        <img name="cc_seal_logo"
+                             title="IRS Chief Counsel Logo" src="/images/CC_Seal.png" alt="">
+                    </a>
+                </div>
+                <div class="col-10 " style="font-size: 30px;">
+                    <p>eTCS Authentication Utility</p>
+                </div>
+                <div class="col-1 " style="padding-top: 20px;">
+                    <span title="logout">
+                        <a href="/logout">
+                            <img src="/images/logoutwhite1.png" alt="">
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </header>
+        <div id="main" class="mainDiv">
+            <div class="row" style="margin-top: 1%">
+                <div class="col-1">
+                    <div class="row">
+                        <div class="col-11">
+                            <div id="mySidenav" class="sidenav sidenav-show">
+                            <div id = "admin" style ="display:none">
+                            <p class="accent-pri">Administrator</p>
+                            <a href="/setupMFA" class="sidenavSelected">Set Up MFA Token</a>
+                            <a href="/associateMFA">Get Refresh Token</a>
+                            <a href="/caseDocument1">View Document</a>
+                            <a href="/caseDocument">View Case</a> 
+                            </div>
+                            
+                            <div id = "user" style ="display:none">
+                            <p class="accent-pri">User</p>
+                            <a href="/caseDocument1">View Document</a>
+                            <a href="/caseDocument">View Case</a> 
+                            </div>
+                            
+                            
+                            <a href="/logout" style="margin-top: 35px;">Log Out</a>
+                        </div>
+                        </div>
+                        <div class="col-1">
+                            <span onclick="openNav()">
+                                <img id="navCollapse" title="Collapse left navigation" class="navCollapseBar" src="/images/Collapse.png" alt="">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-11">
+                    <div class="row">
+                        <div class="col-9">
+                            <form id="documentView" style="display: none"> <!-- display: none -->
+                                <h4 class="text-center">View Document</h4>
+                                <div class="form-group">
+                                    <label>Case Document Id</label>
+                                    <input type="text" name="case_document_id" id="case_document_id" class="form-control" placeholder="Case Document Id" required="required">
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" style="float: right" class="btn btn-primary accent-pri">View Document</button>
+                                    <a href="/logout" style="float: left;margin-top:1%">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-3"></div>
+                    </div>
+                    <div style="text-align: center; width: 100%">
+                        <span style="color: red;display:none" id="error"></span>
+                    </div>
+                    <div style="text-align: center; width: 100%;" id="example1">
+                        <span id="text1111"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var count = 0;
+        var refreshToken="";
+
+        $(document).ready(function() {
+            $("#error").html("");
+            getrefreshToken();
+            getUserRole();
+        });
+        function getrefreshToken(){
+
+            $("#error").html("");
+            $.ajax({
+                url : '/getRefreshCode',
+                contentType : 'application/json',
+                data :null,
+                type : 'POST',
+                success : function(data, textStatus, jqXHR) {
+                    if(data){
+                        refreshToken=data;
+                        document.getElementById("documentView").style.display = "block";
+                    }else{
+                        $("#error").html("Perform Generate Refresh Token step before viewing document");
+                        document.getElementById("error").style.display = "block";
+                    }
+                },
+                error : function(XMLHttpRequest, textStatus, errorThrown) {
+
+                }
+            });
+        }
+
+
+        $("#documentView").submit(function(event) {
+            event.preventDefault();
+            $("#error").html("");
+            var caseId=$("#case_document_id").val();
+            alert("testing case id")
+            if(caseId){
+                var params='{"refreshToken":"'+refreshToken+'","idToken":"'+caseId+'"}';
+                $.ajax({
+                    url : '/downloadDocument',
+                    contentType : 'application/json',
+                    data :params,
+                    type : 'POST',
+                    success : function(data, textStatus, jqXHR) {
+
+                        if(data){
+                        	//alert(data)
+                            call(data);
+                        }else{
+                            $("#error").html("internal server Error");
+                        }
+                    },
+                    error : function(XMLHttpRequest, textStatus, errorThrown) {
+
+                    }
+                });
+            }
+
+        });
+
+
+
+        function getUserRole(){
+        	$.ajax({
+                url: '/getUserRole',
+                contentType: 'application/json',
+                type: 'GET',
+                success: function (data, textStatus, jqXHR) {
+                    if (data) {
+                    	if (data == 'admin'){
+                        	document.getElementById("admin").style.display = "block";
+                        } else {
+                        	document.getElementById("user").style.display = "block";
+                        }
+                        
+                    } else {
+                        $("#succr").html(data.message);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                }
+            });
+        }
+   
+        
+        function call(data){
+            var doc = new jsPDF()
+            doc.text(data, 10, 10);
+            doc.output("dataurlnewwindow");
+            
+        } 
+ 
+
+
+
+    </script>
+
+
+</body>
+
+</html>

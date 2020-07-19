@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>US Tax Courts</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script src="/js/cognito.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/cognito.css" />
+</head>
+<body>
+    <div class="container-fluid ">
+        <header class="">
+            <div class="row banner accent-pri">
+                <div class="col-1" style="padding-left: 40px; padding-top: 20px;">
+                    <a id="" href="/">
+                        <img name="cc_seal_logo"
+                             title="IRS Chief Counsel Logo" src="/images/CC_Seal.png" alt="">
+                    </a>
+                </div>
+                <div class="col-10 " style="font-size: 30px;">
+                    <p>eTCS Authentication Utility</p>
+                </div>
+                <div class="col-1 " style="padding-top: 20px;">
+                    <span title="logout">
+                        <a href="/logout">
+                            <img src="/images/logoutwhite1.png" alt="">
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </header>
+        <div id="main" class="mainDiv">
+            <div class="row" style="margin-top: 1%">
+                <div class="col-1">
+                    <div class="row">
+                    <div class="col-11">
+                        <div id="mySidenav" class="sidenav sidenav-show">
+                            <div id = "admin" style ="display:none">
+                            <p class="accent-pri">Administrator</p>
+                            <a href="/setupMFA" class="sidenavSelected">Set Up MFA Token</a>
+                            <a href="/setupMFA1">MFA Token</a>
+                            <a href="/associateMFA">Get Refresh Token</a>
+                            <a href="/caseDocument1">View Document</a>
+                            <a href="/caseDocument">View Case</a> 
+                            </div>
+                            
+                            <div id = "user" style ="display:none">
+                            <p class="accent-pri">User</p>
+                            <a href="/caseDocument1">View Document</a>
+                            <a href="/caseDocument">View Case</a> 
+                            </div>
+                            
+                            
+                            <a href="/logout" style="margin-top: 35px;">Log Out</a>
+                        </div>
+                      </div>
+                        <div class="col-1">
+                            <span onclick="openNav()">
+                                <img id="navCollapse" title="Collapse left navigation" class="navCollapseBar" src="/images/Collapse.png" alt="">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-11">
+                    <div class="row">
+                        <div class="col-9">
+                            <h4 class="text-center">Set Up MFA Token for User</h4>
+                            <h4 class="text-center">(This is a one time process)</h4>
+                            <div class="form-group">
+                                <label>Secret Code</label> <input type="text"
+                                                                  name="tc_secret_code" id="scCode" class="form-control" value=""
+                                                                  placeholder="Secret Code" readonly> <span style="color: red" id="errorCode"></span>
+                                <div style="float: right">
+                                    <a href="#" onclick="secretCodeF()">Generate Secret Code</a> 
+                                    <a href="#" id="copyButton"
+                                        style="margin-left: 10px; display: none; float: right;"
+                                        onclick="codeCopy()">Copy Secret Code</a>
+                                </div>
+                            </div>
+                            <div class="col-3"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-9">
+                            <form id="tokenForm" style="display: none"> <!--  "display: none"-->
+                                <div class="form-group">
+                                    <label>Enter MFAA Token</label> 
+                                    <input type="text"
+                                        name="mfa_token" id="token" class="form-control"
+                                        placeholder="Enter MFAA Token" required="required">
+                                </div>
+                                <div class="form-group">
+                                    <div style="margin-top: 6%">
+                                        <button type="submit" style="float: right"
+                                                class="btn btn-primary accent-pri">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-3"></div>
+                    </div>
+                    <div style="text-align: center; width: 100%">
+                        <span style="color: green" id="succ"></span>
+                    </div>
+                    <div style="text-align: center; width: 100%">
+                        <span style="color: red" id="succr"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        var count = 0;
+        $(document).ready(function () {
+		getUserRole();
+            
+        	$("#errorCode").html("");
+            $("#succ").html("");
+            $("#succr").html("");
+        });
+        
+        function getUserRole(){
+        	alert("calling");
+        	$.ajax({
+                url: '/getUserRole',
+                contentType: 'application/json',
+                type: 'GET',
+                success: function (data) {
+                	alert(data);
+                    if (data) {
+                    	alert(data.userrole);
+                    	alert(data.username);
+                    	if (data.userrole == 'admin'){
+                        	document.getElementById("admin").style.display = "block";
+                        } else {
+                        	document.getElementById("user").style.display = "block";
+                        }
+                    	
+                    	$("#username").html(data.username);
+                        
+                    } else {
+                        $("#succr").html(data.message);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                }
+            });
+        }
+   
+        	
+        
+
+        function codeCopy() {
+            var copyText = document.getElementById("scCode");
+            if (copyText) {
+                copyText.select();
+                copyText.setSelectionRange(0, 99999)
+                document.execCommand("copy");
+
+            }
+        }
+
+        $("#tokenForm").submit(function (event) {
+            $("#errorCode").html("");
+            $("#succ").html("");
+            $("#succr").html("");
+
+           // alert("testing the page")
+            event.preventDefault();
+
+            var token = $("#token").val();
+            var sccode = $("#scCode").val()
+
+
+            if (token) {
+                var params = '{"mfaToken":"' + token + '"}';
+                $.ajax({
+                    url: '/submitMfa',
+                    contentType: 'application/json',
+                    data: params,
+                    type: 'POST',
+                    success: function (data, textStatus, jqXHR) {
+                        if (data.message) {
+                            $("#succ").html(data.message);
+                        } else {
+                            $("#succr").html(data.message);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    }
+                });
+            }
+        });
+
+        function secretCodeF() {
+            $("#errorCode").html("");
+            $("#succ").html("");
+            $("#succr").html("");
+
+            $.ajax({
+                url: '/process-choice',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: '{"id": "1"}',
+                type: 'POST',
+                success: function (data, textStatus, jqXHR) {
+                    if (data.secretCode) {
+                        $("#scCode").val(data.secretCode);
+                        document.getElementById("copyButton").style.display = "block";
+                        document.getElementById("tokenForm").style.display = "block";
+
+                    } else {
+                        $("#errorCode").html(data.message);
+                        document.getElementById("copyButton").style.display = "none";
+                        document.getElementById("tokenForm").style.display = "none";
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus,
+                        errorThrown) {
+
+                }
+            });
+
+        }
+    </script>
+</body>
+
+</html>
